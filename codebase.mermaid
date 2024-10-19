@@ -1,0 +1,45 @@
+flowchart TD
+  A[Streamlit App] -->|Configuration| B[Page Setup and Styles]
+  A -->|Environment| C[Load Env Variables]
+  A -->|Data Loading| D[Load Data]
+  A -->|Sidebar| E[Sidebar Navigation]
+  A -->|Main Content| F[Main Display Function]
+
+  F -->|Analysis Selection| G[Analysis Type]
+  G -->|ESG Compliance| H[show_esg_compliance]
+  G -->|Report-Based Analysis| I[show_report_based_agent]
+  G -->|Internet-Based Analysis| J[show_internet_based_agent]
+
+  H -->|Company Results| K[Read and Display CSV Results]
+  H -->|Compliance Dial| L[create_compliance_dial]
+  I -->|Vector DB| M[Load Vector Database]
+  I -->|QA Chain| N[Setup Retrieval Chain]
+  J -->|Internet Search| O[DuckDuckGo Search]
+  O -->|Chat Response| P[Handle Internet-Based Response]
+
+  %% Nodes for setup_vector_dbs.ipynb
+  subgraph Vector DB Setup
+    Q[Data Processing Pipeline]
+    Q -->|Load Dataset| R[Load Reports Data]
+    Q -->|Download PDFs| S[download_reports]
+    Q -->|Text Processing| T[Extract and Split Text]
+    Q -->|Create Embeddings| U[Generate Vector Database]
+    U -->|Save Vector DB| V[Save as Pickle]
+    R -->|Filter Dataset| X[Filter handcrafted Companies]
+  end
+
+  %% Nodes for gen_compliance.ipynb
+  subgraph Compliance Generation
+    Z[Compliance Generation Pipeline]
+    Z -->|Load Criteria| AA[Load ESG Compliance Criteria]
+    Z -->|Load Vector DB| BB[Load Vector Database for Company]
+    Z -->|Test Compliance| CC[Test Company Compliance for Goal]
+    Z -->|Save Results| DD[Save Compliance Results to CSV]
+    AA -->|Iterate Goals| EE[Loop over ESG Goals]
+    BB -->|Retrieve Documents| FF[Retrieve Relevant Documents]
+    CC -->|Run LLM| GG[Run LLM Chain to Generate Results]
+  end
+
+  H -->|Load CSV| DD
+  M -->|Load Pickle| V
+  GG -->|Analyze Results| N
