@@ -76,8 +76,9 @@ analysis_type = st.sidebar.radio("Select Analysis Type:", ["ESG Compliance","Rep
 if not openai_api_key:
     st.sidebar.warning("OpenAI API key is required for certain analyses. Please add your key to proceed.")
     openai_api_key = st.sidebar.text_input("Enter your OpenAI API key:", type="password")
-    if openai_api_key:
+    if openai_api_key and st.sidebar.button("Submit API Key"):
         st.session_state["openai_api_key"] = openai_api_key
+        st.experimental_rerun()
 else:
     st.session_state["openai_api_key"] = openai_api_key
 

@@ -7,8 +7,11 @@ SAM (Sustainability Advanced Model) is an AI-driven platform that analyzes and a
 ## Table of Contents
 
 - [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
+- [Online Demo](#online-demo)
+- [Local Usage](#local-usage)
+  - [Prerequisites](#prerequisites)
+  - [Install dependencies](#install-dependencies)
+  - [Environment Variables](#environment-variables)
   - [Setup](#setup)
   - [Running the Application](#running-the-application)
   - [Generating ESG Compliance Results](#generating-esg-compliance-results)
