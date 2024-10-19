@@ -81,7 +81,7 @@ if not st.session_state["openai_api_key"]:
     input_openai_api_key = st.sidebar.text_input("Enter your OpenAI API key:", type="password")
     if st.sidebar.button("Submit API Key"):
         st.session_state["openai_api_key"] = input_openai_api_key
-        st.experimental_rerun()  # This ensures the app reloads with the new key
+        st.rerun()  # This ensures the app reloads with the new key
 
 # ----------------- Main -----------------
 
