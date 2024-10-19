@@ -1,5 +1,7 @@
 # SAM: Sustainability Advanced Model | Nexus Group AI
 
+Check out our website at [nexus-group.ai](https://nexus-group.ai/)
+
 SAM (Sustainability Advanced Model) is an AI-driven platform that analyzes and assesses the ESG (Environmental, Social, and Governance) compliance of companies based on their reports and internet-based data. This project leverages LangChain, FAISS, and OpenAI’s GPT models to generate detailed compliance results for selected companies in alignment with the goals of the EU Green Deal.
 
 ## Table of Contents
@@ -22,7 +24,13 @@ SAM (Sustainability Advanced Model) is an AI-driven platform that analyzes and a
 - **Interactive Dashboards**: Uses Streamlit for an interactive web application to visualize ESG compliance and other analytical insights.
 - **Automated PDF Processing**: Downloads company reports, extracts text, and builds searchable vector databases.
 
-## Installation
+## Online Demo
+
+You can access the live demo of the SAM platform at [sam-prototype.streamlit.app](https://sam-prototype.streamlit.app/).
+
+To use the live AI features however, you will need to supply your own OpenAI API key.
+
+## Local Usage
 
 ### Prerequisites
 
@@ -43,8 +51,6 @@ Create a `.env` file at the root of the project with the following contents:
 ```
 OPENAI_API_KEY=your_openai_api_key
 ```
-
-## Usage
 
 ### Setup
 
