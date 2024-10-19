@@ -1,79 +1,144 @@
 import streamlit as st
-import openai
-
 import pandas as pd
-from dotenv import load_dotenv
-import matplotlib.pyplot as plt
-from PyPDF2 import PdfReader
-
 import os
+import requests
+from PyPDF2 import PdfReader
+import matplotlib.pyplot as plt
 
-# Load environment variables
-load_dotenv()
+# Helper function to load the dataset from JSON
+def load_dataset(dataset_name):
+    try:
+        df = pd.read_json('data/reports.json')
+        return df[df['dataset'] == dataset_name]
+    except Exception as e:
+        st.error(f"Failed to load dataset: {e}")
+        return None
 
-# Set OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Function to download reports based on URLs in the dataset
+def download_reports(df, dataset_name):
+    os.makedirs(f"data/{dataset_name}/reports", exist_ok=True)
+    for index, row in df.iterrows():
+        company_name = row["company_name"]
+        year = row["year"]
+        pdf_url = row["pdf_url"]
+        file_name = f"{company_name}_{year}.pdf".replace(" ", "_")
+        file_path = f"data/{dataset_name}/reports/{file_name}"
 
-# Extract text from the uploaded PDF
-def extract_text_from_pdf(uploaded_file):
-    reader = PdfReader(uploaded_file)
-    text = ""
-    for page in reader.pages:
-        text += page.extract_text()
-    return text
+        # Download the file if it doesn't already exist
+        if not os.path.exists(file_path):
+            try:
+                response = requests.get(pdf_url)
+                if response.status_code == 200:
+                    with open(file_path, "wb") as pdf_file:
+                        pdf_file.write(response.content)
+                    st.write(f"Downloaded: {file_name}")
+                else:
+                    st.warning(f"Failed to download {file_name}: {response.status_code}")
+            except Exception as e:
+                st.error(f"Error downloading {file_name}: {e}")
+        else:
+            st.write(f"{file_name} already exists.")
 
-# Query OpenAI for insights from the report
-def query_openai(text, query):
-    prompt = f"Based on the following ESG report:\n\n{text}\n\nAnswer this query: {query}"
-    
-    response = openai.Completion.create(
-        engine="gpt-4",
-        prompt=prompt,
-        max_tokens=500
-    )
-    return response.choices[0].text.strip()
+# Extract text from a downloaded PDF file
+def extract_text_from_pdf(file_path):
+    try:
+        reader = PdfReader(file_path)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+        return text
+    except Exception as e:
+        st.error(f"Failed to extract text from {file_path}: {e}")
+        return ""
 
-# Example Visualization function (adjust for actual data)
-def visualize_data():
-    years = [2019, 2021, 2023]
-    carbon_emissions = [500, 450, 300]
+# Functionality for interacting with the dataset
+def display_summary(df):
+    st.write("### Dataset Summary")
+    st.write(df.describe())
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(years, carbon_emissions, marker='o')
-    plt.title("Carbon Emissions Over Time")
-    plt.xlabel("Year")
-    plt.ylabel("Carbon Emissions (tons)")
-    st.pyplot(plt)
+def filter_by_company(df):
+    company_name = st.selectbox("Select a company to filter:", df["company_name"].unique())
+    filtered_df = df[df["company_name"] == company_name]
+    st.write(f"Showing data for {company_name}")
+    st.write(filtered_df)
+
+def filter_by_year(df):
+    year = st.slider("Select a year to filter:", int(df["year"].min()), int(df["year"].max()))
+    filtered_df = df[df["year"] == year]
+    st.write(f"Showing data for the year {year}")
+    st.write(filtered_df)
+
+def visualize_trends(df):
+    st.write("### Visualize Report Trends Over Time")
+    companies = st.multiselect("Select companies to compare:", df["company_name"].unique())
+    if companies:
+        filtered_df = df[df["company_name"].isin(companies)]
+        grouped_data = filtered_df.groupby(['year', 'company_name']).size().reset_index(name='Counts')
+        
+        plt.figure(figsize=(10, 6))
+        for company in companies:
+            company_data = grouped_data[grouped_data["company_name"] == company]
+            plt.plot(company_data["year"], company_data["Counts"], marker='o', label=company)
+        
+        plt.title("Number of ESG Reports Over Time")
+        plt.xlabel("Year")
+        plt.ylabel("Number of Reports")
+        plt.legend()
+        st.pyplot(plt)
+
+def search_company_info(df):
+    query = st.text_input("Search for information by company name:")
+    if query:
+        search_result = df[df['company_name'].str.contains(query, case=False, na=False)]
+        if not search_result.empty:
+            st.write(f"Results for '{query}':")
+            st.write(search_result)
+        else:
+            st.write(f"No results found for '{query}'.")
 
 # Streamlit UI
 st.title("ESG Report Analyzer")
-st.write("Upload an ESG report and analyze sustainability data.")
+st.write("Analyze and interact with ESG reports from different companies.")
 
-# File Upload
-uploaded_file = st.file_uploader("Upload an ESG report (PDF)", type="pdf")
-if uploaded_file:
-    # Extract text from uploaded PDF
-    text = extract_text_from_pdf(uploaded_file)
-    
-    st.subheader("Report Content")
-    st.write(text[:1000])  # Display first 1000 characters as a preview
+# Dataset Selection
+dataset_name = st.selectbox("Select a dataset to load:", ["handcrafted", "austria", "scraped"])
+if st.button("Load Dataset"):
+    df = load_dataset(dataset_name)
+    if df is not None and not df.empty:
+        st.write("### Loaded Dataset")
+        st.write(df)
 
-    # Query Section
-    query = st.text_input("Ask a question about this report:")
-    
-    if query:
-        # Send the query to OpenAI
-        response = query_openai(text, query)
-        
-        st.subheader("AI Generated Answer")
-        st.write(response)
+        # Download Reports
+        if st.button("Download ESG Reports"):
+            download_reports(df, dataset_name)
 
-# Load data from reports.json (if applicable)
-if st.checkbox("Show Pre-loaded Company Data"):
-    df = pd.read_json('data/reports.json')
-    st.write(df)
+        # Interaction Options
+        interaction_choice = st.selectbox("Choose how you want to interact with the data:", [
+            "Summary of Dataset",
+            "Filter by Company",
+            "Filter by Year",
+            "Visualize Trends",
+            "Search Company Information",
+            "Extract Text from Report"
+        ])
 
-# Sample Visualization
-if st.checkbox("Show ESG Trends Visualization"):
-    visualize_data()
+        if interaction_choice == "Summary of Dataset":
+            display_summary(df)
+        elif interaction_choice == "Filter by Company":
+            filter_by_company(df)
+        elif interaction_choice == "Filter by Year":
+            filter_by_year(df)
+        elif interaction_choice == "Visualize Trends":
+            visualize_trends(df)
+        elif interaction_choice == "Search Company Information":
+            search_company_info(df)
+        elif interaction_choice == "Extract Text from Report":
+            report_files = os.listdir(f"data/{dataset_name}/reports")
+            report_file = st.selectbox("Select a report to extract text from:", report_files)
+            if report_file:
+                file_path = f"data/{dataset_name}/reports/{report_file}"
+                extracted_text = extract_text_from_pdf(file_path)
+                if extracted_text:
+                    st.subheader(f"Extracted Text from {report_file}")
+                    st.write(extracted_text[:1000])  # Display the first 1000 characters
 
