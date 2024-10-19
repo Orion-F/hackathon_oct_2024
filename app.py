@@ -18,9 +18,8 @@ import plotly.graph_objects as go
 # Configure the page
 st.set_page_config(layout="wide", page_title="SAM | Nexus Group AI", page_icon="🚀") # SAM = Sustainability Advanced Model
 
-# Load environment variables
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
 # MODEL = "gpt-3.5-turbo"
 MODEL = "gpt-4o"
 
@@ -73,6 +72,15 @@ st.sidebar.title("Navigation")
 company = st.sidebar.selectbox("Select a Company:", df['company_name'].unique())
 analysis_type = st.sidebar.radio("Select Analysis Type:", ["ESG Compliance","Report-Based Analysis", "Internet-Based Analysis"])
 
+# API Key Input
+if not openai_api_key:
+    st.sidebar.warning("OpenAI API key is required for certain analyses. Please add your key to proceed.")
+    openai_api_key = st.sidebar.text_input("Enter your OpenAI API key:", type="password")
+    if openai_api_key:
+        st.session_state["openai_api_key"] = openai_api_key
+else:
+    st.session_state["openai_api_key"] = openai_api_key
+
 # ----------------- Main -----------------
 
 def show_main():
@@ -83,8 +91,14 @@ def show_main():
         if analysis_type == "ESG Compliance":
             show_esg_compliance(company)
         elif analysis_type == "Report-Based Analysis":
+            if "openai_api_key" not in st.session_state or not st.session_state["openai_api_key"]:
+                st.info("Please add your OpenAI API key to continue with Report-Based Analysis.")
+                return
             show_report_based_agent(company)
         elif analysis_type == "Internet-Based Analysis":
+            if "openai_api_key" not in st.session_state or not st.session_state["openai_api_key"]:
+                st.info("Please add your OpenAI API key to continue with Internet-Based Analysis.")
+                return
             show_internet_based_agent(company)  
 
 # Function to create the compliance dial with percentage display
@@ -159,7 +173,7 @@ def show_report_based_agent(company):
     db = FAISS.deserialize_from_bytes(db_bytes, OpenAIEmbeddings(), allow_dangerous_deserialization=True)
 
     # Load the LLM
-    llm = ChatOpenAI(model_name=MODEL, temperature=0, openai_api_key=OPENAI_API_KEY)
+    llm = ChatOpenAI(model_name=MODEL, temperature=0, openai_api_key=st.session_state["openai_api_key"])
 
     system_prompt = """
     You are an expert assistant. Use only the following retrieved context to answer the question accurately and concisely. 
@@ -220,11 +234,11 @@ def show_internet_based_agent(company):
         st.chat_message(msg["role"]).write(msg["content"])
 
     if prompt := st.chat_input():
-        if not OPENAI_API_KEY:
+        if "openai_api_key" not in st.session_state or not st.session_state["openai_api_key"]:
             st.info("Please add your OpenAI API key to continue.")
             return
 
-        llm = ChatOpenAI(model_name=MODEL, openai_api_key=OPENAI_API_KEY, streaming=True)
+        llm = ChatOpenAI(model_name=MODEL, openai_api_key=st.session_state["openai_api_key"], streaming=True)
         search = DuckDuckGoSearchRun(name="Search")
         search_agent = initialize_agent([search], llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, handle_parsing_errors=True)
 
