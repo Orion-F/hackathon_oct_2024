@@ -73,14 +73,15 @@ company = st.sidebar.selectbox("Select a Company:", df['company_name'].unique())
 analysis_type = st.sidebar.radio("Select Analysis Type:", ["ESG Compliance","Report-Based Analysis", "Internet-Based Analysis"])
 
 # API Key Input
-if not openai_api_key:
-    st.sidebar.warning("OpenAI API key is required for certain analyses. Please add your key to proceed.")
-    openai_api_key = st.sidebar.text_input("Enter your OpenAI API key:", type="password")
-    if openai_api_key and st.sidebar.button("Submit API Key"):
-        st.session_state["openai_api_key"] = openai_api_key
-        st.experimental_rerun()
-else:
+if "openai_api_key" not in st.session_state:
     st.session_state["openai_api_key"] = openai_api_key
+
+if not st.session_state["openai_api_key"]:
+    st.sidebar.warning("OpenAI API key is required for certain analyses. Please add your key to proceed.")
+    input_openai_api_key = st.sidebar.text_input("Enter your OpenAI API key:", type="password")
+    if st.sidebar.button("Submit API Key"):
+        st.session_state["openai_api_key"] = input_openai_api_key
+        st.experimental_rerun()  # This ensures the app reloads with the new key
 
 # ----------------- Main -----------------
 
@@ -171,7 +172,7 @@ def show_report_based_agent(company):
 
     with open(db_path, "rb") as f:
         db_bytes = pickle.load(f)
-    db = FAISS.deserialize_from_bytes(db_bytes, OpenAIEmbeddings(), allow_dangerous_deserialization=True)
+    db = FAISS.deserialize_from_bytes(db_bytes, OpenAIEmbeddings(api_key=st.session_state["openai_api_key"]), allow_dangerous_deserialization=True)
 
     # Load the LLM
     llm = ChatOpenAI(model_name=MODEL, temperature=0, openai_api_key=st.session_state["openai_api_key"])
