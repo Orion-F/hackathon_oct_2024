@@ -163,7 +163,7 @@ def show_report_based_agent(company):
 
     system_prompt = """
     You are an expert assistant. Use only the following retrieved context to answer the question accurately and concisely. 
-    If nothing is mentioned in the context, say "I don't know".
+    If nothing is mentioned in the context, say "I am unable to answer that question".
     Context: {context}
     Question: {question}
     """

@@ -13,7 +13,6 @@ SAM (Sustainability Advanced Model) is an AI-driven platform that analyzes and a
   - [Setting up Vector Databases](#setting-up-vector-databases)
 - [Project Structure](#project-structure)
 - [Technologies](#technologies)
-- [License](#license)
 
 ## Features
 
@@ -31,13 +30,6 @@ SAM (Sustainability Advanced Model) is an AI-driven platform that analyzes and a
 - [OpenAI API key](https://beta.openai.com/signup/)
 - [DuckDuckGo API Key](https://duckduckgo.com)
 - Install dependencies via `requirements.txt`
-
-### Clone the repository
-
-```bash
-git clone https://github.com/nexus-group-ai/sam-esg-compliance.git
-cd sam-esg-compliance
-```
 
 ### Install dependencies
 
