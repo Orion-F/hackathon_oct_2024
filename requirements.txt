@@ -1,18 +1,18 @@
-jupyter
+# jupyter
 pandas
 numpy
 requests
 tiktoken
 matplotlib
-langchain
+# langchain
 openai
-python-docx
-python-pptx
+# python-docx
+# python-pptx
 PyPDF2
-markdown2
-langchain-community
-langchain-core
-sentence-transformers
-faiss-cpu
-langchain-openai
+# markdown2
+# langchain-community
+# langchain-core
+# sentence-transformers
+# faiss-cpu
+# langchain-openai
 python-dotenv
