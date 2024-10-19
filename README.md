@@ -28,7 +28,6 @@ SAM (Sustainability Advanced Model) is an AI-driven platform that analyzes and a
 
 - Python 3.8 or higher
 - [OpenAI API key](https://beta.openai.com/signup/)
-- [DuckDuckGo API Key](https://duckduckgo.com)
 - Install dependencies via `requirements.txt`
 
 ### Install dependencies
