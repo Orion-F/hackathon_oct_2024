@@ -11,6 +11,7 @@ from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
+import plotly.graph_objects as go
 
 # ----------------- Configuration -----------------
 
@@ -20,7 +21,8 @@ st.set_page_config(layout="wide", page_title="SAM | Nexus Group AI", page_icon="
 # Load environment variables
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL = "gpt-3.5-turbo"
+# MODEL = "gpt-3.5-turbo"
+MODEL = "gpt-4o"
 
 # Paths
 DATA_PATH = "data/handcrafted"
@@ -34,9 +36,23 @@ NEXUS_BLUE = "#5170ff"
 # NEXUS_PINK = "#ffa3ff"
 NEXUS_PINK = "#B963B9" # improved pink color
 
-COLOR_LOW = "lightgreen"
-COLOR_MEDIUM = "gold"
-COLOR_HIGH = "tomato"
+COLOR_HIGH = '#2E7D32'   # Darker Green
+COLOR_MEDIUM = '#F9A825' # Darker Golden Yellow
+COLOR_LOW = '#B71C1C'    # Darker Red
+VALUE_LOW = 0
+VALUE_MEDIUM = 50
+VALUE_HIGH = 100
+
+# Function to apply the colors to the Compliance column
+def compliance_color(val):
+    if val == "HIGH":
+        return f'background-color: {COLOR_HIGH}'
+    elif val == "MEDIUM":
+        return f'background-color: {COLOR_MEDIUM}'
+    elif val == "LOW":
+        return f'background-color: {COLOR_LOW}'
+    else:
+        return ''
 
 # ----------------- Data -----------------
 
@@ -59,10 +75,75 @@ analysis_type = st.sidebar.radio("Select Analysis Type:", ["ESG Compliance","Rep
 
 # ----------------- Main -----------------
 
-st.title("SAM: Sustainability Advanced Model")
+def show_main():
+    st.title("SAM: Sustainability Advanced Model")
+
+    # Show the company page with the selected analysis type
+    if company:
+        if analysis_type == "ESG Compliance":
+            show_esg_compliance(company)
+        elif analysis_type == "Report-Based Analysis":
+            show_report_based_agent(company)
+        elif analysis_type == "Internet-Based Analysis":
+            show_internet_based_agent(company)  
+
+# Function to create the compliance dial with percentage display
+def create_compliance_dial(value):
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number+delta",  # Display percentage
+        value=value,
+        number={'suffix': "%"},  # Display the value as a percentage
+        gauge={
+            'axis': {'range': [0, 100], 'tickvals': [0, 33, 66, 100], 'ticktext': ['Low', 'Medium', 'High', '']},
+            'bar': {'color': "darkblue"},  # Color of the bar that shows the actual value
+            'steps': [
+                {'range': [0, 33], 'color': "lightgreen"},   # Low section
+                {'range': [33, 66], 'color': "gold"},        # Medium section
+                {'range': [66, 100], 'color': "tomato"}      # High section
+            ],
+            'threshold': {
+                'line': {'color': "black", 'width': 4},
+                'thickness': 0.75,
+                'value': value
+            }
+        }
+    ))
+
+    # Reduce the size of the gauge to fit in the sidebar
+    fig.update_layout(
+        font={'size': 10},
+        height=200, width=200, margin=dict(l=10, r=10, t=10, b=10)
+    )
+    
+    return fig
 
 def show_esg_compliance(company):
     st.header(f"ESG Compliance: {company}")
+    company_dir = os.path.join(DATA_PATH, company)
+
+    # Read the results.csv file from the company directory
+    results_path = os.path.join(company_dir, "results.csv")
+    results_df = pd.read_csv(results_path)  # headers: Goal, Compliance, Explanation, where Compliance is HIGH, MEDIUM, LOW
+
+    # Calculate the average compliance score
+    compliance_scores = results_df['Compliance'].map({"HIGH": VALUE_HIGH, "MEDIUM": VALUE_MEDIUM, "LOW": VALUE_LOW})
+    average_compliance = compliance_scores.mean()
+
+    st.write(f"Based on the collected reports, the SAM ESG Agent estimates that {company} has the following levels of compliance with the goals of the EU Green Deal.")
+
+    st.header("Overall Compliance")
+    st.plotly_chart(create_compliance_dial(average_compliance), use_container_width=True)
+
+    st.header("Detailed Compliance")
+    
+    results_df = results_df.rename(columns={"Goal": "EU Green Deal Goal"})
+    
+    # Apply the color function to the dataframe
+    styled_df = results_df.style.applymap(compliance_color, subset=['Compliance'])
+
+    # Display the styled dataframe in Streamlit
+    st.dataframe(styled_df)
+
 
 def show_report_based_agent(company):
     st.header(f"ESG Agent: {company} (Report-Based Analysis)")
@@ -156,11 +237,4 @@ def show_internet_based_agent(company):
             st.session_state.messages.append({"role": "assistant", "content": response})
             st.write(response)
 
-# Show the company page with the selected analysis type
-if company:
-    if analysis_type == "ESG Compliance":
-        show_esg_compliance(company)
-    elif analysis_type == "Report-Based Analysis":
-        show_report_based_agent(company)
-    elif analysis_type == "Internet-Based Analysis":
-        show_internet_based_agent(company)
+show_main()

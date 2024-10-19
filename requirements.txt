@@ -1,20 +1,10 @@
-# # jupyter
-# pandas
-# numpy
-# requests
-# tiktoken
-# matplotlib
-# # langchain
-# openai
-# # python-docx
-# # python-pptx
-# PyPDF2
-# # markdown2
-# # langchain-community
-# # langchain-core
-# # sentence-transformers
-# # faiss-cpu
-# # langchain-openai
-# python-dotenv
-
-
+streamlit
+pandas
+langchain_openai
+langchain
+langchain_community
+python-dotenv
+plotly
+faiss-cpu
+openai
+duckduckgo-search
