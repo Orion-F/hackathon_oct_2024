@@ -1,4 +1,6 @@
-# SAM: Sustainability Advanced Model | Nexus Group AI
+# SAM: Sustainability Advanced Model
+
+![Project Screenshot](img/screenshot.png)
 
 Check out our website at [nexus-group.ai](https://nexus-group.ai/)
 
